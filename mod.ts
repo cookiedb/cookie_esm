@@ -2,22 +2,34 @@
  * A type representing a valid schema
  */
 export interface Schema {
-  [key: string]: "string" | "string?" | "boolean" | "boolean?" | "number" | "number?" | Schema
+  [key: string]:
+    | "string"
+    | "string?"
+    | "boolean"
+    | "boolean?"
+    | "number"
+    | "number?"
+    | Schema;
 }
 
 /**
- * A type representing a valid query
+ * A type representing valid types for CookieDB
  */
-export interface Query {
-  [key: string]: string | Query
+export type ValidTypes = string | number | boolean | null;
+
+/**
+ * A type representing a valid document
+ */
+export interface Document {
+  [key: string]: ValidTypes | ValidTypes[] | Document;
 }
 
 /**
  * Main CookieDB interface
  */
 export class CookieDB {
-  url: string
-  auth: string
+  url: string;
+  auth: string;
 
   /**
    * @param url The url of the cookieDB server (ex: `http://localhost:8777`)
@@ -28,8 +40,8 @@ export class CookieDB {
    * ```
    */
   constructor(url: string, auth: string) {
-    this.url = url
-    this.auth = `Bearer ${auth}`
+    this.url = url;
+    this.auth = `Bearer ${auth}`;
   }
 
   /**
@@ -41,16 +53,16 @@ export class CookieDB {
    *  description: 'string?',
    *  age: 'number'
    * })
-   * ``` 
+   * ```
    */
   async createTable(table: string, schema?: Schema) {
     await (await fetch(`${this.url}/create/${table}`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        Authorization: this.auth
+        Authorization: this.auth,
       },
-      body: schema ? JSON.stringify(schema) : undefined
-    })).text()
+      body: schema ? JSON.stringify(schema) : undefined,
+    })).text();
   }
 
   /**
@@ -58,15 +70,15 @@ export class CookieDB {
    * @example
    * ```javascript
    * await cookieDB.dropTable('users')
-   * ``` 
+   * ```
    */
   async dropTable(table: string) {
-    await(await fetch(`${this.url}/drop/${table}`, {
-      method: 'POST',
+    await (await fetch(`${this.url}/drop/${table}`, {
+      method: "POST",
       headers: {
-        Authorization: this.auth
-      }
-    })).text()
+        Authorization: this.auth,
+      },
+    })).text();
   }
 
   /**
@@ -81,16 +93,24 @@ export class CookieDB {
    * })
    * ```
    */
-  async insert(table: string, document: any) {
-    const res = await fetch(`${this.url}/insert/${table}`, {
-      method: 'POST',
+  async insert<T extends Document | Document[]>(
+    table: string,
+    document: T,
+  ): Promise<T extends Document[] ? string[] : string> {
+    const req = await fetch(`${this.url}/insert/${table}`, {
+      method: "POST",
       headers: {
-        Authorization: this.auth
+        Authorization: this.auth,
       },
-      body: JSON.stringify(document)
-    })
+      body: JSON.stringify(document),
+    });
 
-    return await res.text()
+    if (Array.isArray(document)) {
+      return await req.json();
+    } else {
+      // @ts-ignore we return a string conditionally here, but typescript isn't smart enough to narrow types in this situation
+      return await req.text();
+    }
   }
 
   /**
@@ -100,18 +120,22 @@ export class CookieDB {
    * await cookieDB.get('users', 'b94a8779-f737-466b-ac40-4dfb130f0eee')
    * ```
    */
-  async get(table: string, key: string, expandKeys?: boolean) {
-    const res = await fetch(`${this.url}/get/${table}/${key}`, {
-      method: 'POST',
+  async get(
+    table: string,
+    key: string,
+    expandKeys?: boolean,
+  ): Promise<Document> {
+    const req = await fetch(`${this.url}/get/${table}/${key}`, {
+      method: "POST",
       headers: {
-        Authorization: this.auth
+        Authorization: this.auth,
       },
       body: JSON.stringify({
-        expand_keys: !!expandKeys // force into boolean
-      })
-    })
+        expand_keys: !!expandKeys, // force into boolean
+      }),
+    });
 
-    return await res.json()
+    return await req.json();
   }
 
   /**
@@ -122,12 +146,12 @@ export class CookieDB {
    * ```
    */
   async delete(table: string, key: string) {
-    await(await fetch(`${this.url}/delete/${table}/${key}`, {
-      method: 'POST',
+    await (await fetch(`${this.url}/delete/${table}/${key}`, {
+      method: "POST",
       headers: {
-        Authorization: this.auth
-      }
-    })).text()
+        Authorization: this.auth,
+      },
+    })).text();
   }
 
   /**
@@ -141,14 +165,14 @@ export class CookieDB {
    * })
    * ```
    */
-  async update(table: string, key: string, document: any) {
-    await(await fetch(`${this.url}/update/${table}/${key}`, {
-      method: 'POST',
+  async update(table: string, key: string, document: Document) {
+    await (await fetch(`${this.url}/update/${table}/${key}`, {
+      method: "POST",
       headers: {
-        Authorization: this.auth
+        Authorization: this.auth,
       },
-      body: JSON.stringify(document)
-    })).text()
+      body: JSON.stringify(document),
+    })).text();
   }
 
   /**
@@ -163,21 +187,24 @@ export class CookieDB {
    * })
    * ```
    */
-  async select(table: string, query: Query | Query[], options?: {maxResults?: number, showKeys?: boolean, expandKeys?: boolean}): Promise<any[]> {
-    const res = await fetch(`${this.url}/select/${table}`, {
-      method: 'POST',
+  async select(
+    table: string,
+    where?: string,
+    options?: { maxResults?: number; showKeys?: boolean; expandKeys?: boolean },
+  ): Promise<Document[]> {
+    const req = await fetch(`${this.url}/select/${table}`, {
+      method: "POST",
       headers: {
-        Authorization: this.auth
+        Authorization: this.auth,
       },
       body: JSON.stringify({
-        queries: Array.isArray(query) ? query : undefined,
-        query: Array.isArray(query) ? undefined : query,
+        where: where,
         max_results: options?.maxResults ?? -1,
         show_keys: options?.showKeys ?? false,
-        expand_keys: options?.expandKeys ?? false
-      })
-    })
+        expand_keys: options?.expandKeys ?? false,
+      }),
+    });
 
-    return await res.json()
+    return await req.json();
   }
 }
