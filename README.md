@@ -23,9 +23,15 @@ const cookieDB = new CookieDB(
 // Create a table with a schema
 await cookieDB.createTable("users", {
   name: "string",
-  description: "string?",
+  description: "nullable string",
   age: "number",
 });
+
+// Get schema for a table
+await cookieDB.metaTable("users");
+
+// Get schemas for all table
+await cookieDB.meta();
 
 // Insert document
 const cookieFanKey = await cookieDB.insert("users", {
@@ -59,4 +65,13 @@ await cookieDB.delete("users", cookieFanKey);
 
 // Drop the table
 await cookieDB.dropTable("users");
+
+// Create a user
+const { username, token } = await cookieDB.createUser({
+  username: "cookie fan",
+  token: "a_very_secure_password",
+});
+
+// Delete a user
+await cookieDB.deleteUser("cookie fan");
 ```
