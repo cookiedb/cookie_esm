@@ -1,14 +1,29 @@
 /**
+ * Possible types for schemas
+ */
+export type SchemaTypes = "string" | "boolean" | "number" | "foreign_key";
+
+/**
+ * Possible keywords for schemas
+ */
+export type SchemaKeywords = SchemaTypes | "nullable" | "unique";
+
+/**
  * A type representing a valid schema
  */
 export interface Schema {
   [key: string]:
-    | "string"
-    | "string?"
-    | "boolean"
-    | "boolean?"
-    | "number"
-    | "number?"
+    | SchemaTypes
+    | `nullable ${SchemaTypes}`
+    | `${SchemaTypes} nullable`
+    | `unique ${SchemaTypes}`
+    | `${SchemaTypes} unique`
+    | `unique nullable ${SchemaTypes}`
+    | `unique ${SchemaTypes} nullable`
+    | `${SchemaTypes} unique nullable`
+    | `nullable ${SchemaTypes} unique`
+    | `${SchemaTypes} nullable unique`
+    | `nullable unique ${SchemaTypes}`
     | Schema;
 }
 
@@ -56,13 +71,17 @@ export class CookieDB {
    * ```
    */
   async createTable(table: string, schema?: Schema) {
-    await (await fetch(`${this.url}/create/${table}`, {
+    const req = await fetch(`${this.url}/create/${table}`, {
       method: "POST",
       headers: {
         Authorization: this.auth,
       },
       body: schema ? JSON.stringify(schema) : undefined,
-    })).text();
+    });
+
+    const res = await req.text();
+
+    if (res !== "success") throw res;
   }
 
   /**
@@ -73,12 +92,36 @@ export class CookieDB {
    * ```
    */
   async dropTable(table: string) {
-    await (await fetch(`${this.url}/drop/${table}`, {
+    const req = await fetch(`${this.url}/drop/${table}`, {
       method: "POST",
       headers: {
         Authorization: this.auth,
       },
-    })).text();
+    });
+
+    const res = await req.text();
+
+    if (res !== "success") throw res;
+  }
+
+  /**
+   * Gets metadata for a table by name
+   * @example
+   * ```javascript
+   * await cookieDB.metaTable('users')
+   * ```
+   */
+  async metaTable(table: string): Promise<{
+    schema: Schema;
+  }> {
+    const req = await fetch(`${this.url}/meta/${table}`, {
+      method: "POST",
+      headers: {
+        Authorization: this.auth,
+      },
+    });
+
+    return await req.json();
   }
 
   /**
@@ -146,12 +189,16 @@ export class CookieDB {
    * ```
    */
   async delete(table: string, key: string) {
-    await (await fetch(`${this.url}/delete/${table}/${key}`, {
+    const req = await fetch(`${this.url}/delete/${table}/${key}`, {
       method: "POST",
       headers: {
         Authorization: this.auth,
       },
-    })).text();
+    });
+
+    const res = await req.text();
+
+    if (res !== "success") throw res;
   }
 
   /**
@@ -166,13 +213,17 @@ export class CookieDB {
    * ```
    */
   async update(table: string, key: string, document: Document) {
-    await (await fetch(`${this.url}/update/${table}/${key}`, {
+    const req = await fetch(`${this.url}/update/${table}/${key}`, {
       method: "POST",
       headers: {
         Authorization: this.auth,
       },
       body: JSON.stringify(document),
-    })).text();
+    });
+
+    const res = await req.text();
+
+    if (res !== "success") throw res;
   }
 
   /**
@@ -190,7 +241,15 @@ export class CookieDB {
   async select(
     table: string,
     where?: string,
-    options?: { maxResults?: number; showKeys?: boolean; expandKeys?: boolean },
+    options?: {
+      maxResults?: number;
+      showKeys?: boolean;
+      expandKeys?: boolean;
+      order?: {
+        by: string;
+        descending?: boolean;
+      };
+    },
   ): Promise<Document[]> {
     const req = await fetch(`${this.url}/select/${table}`, {
       method: "POST",
@@ -202,9 +261,76 @@ export class CookieDB {
         max_results: options?.maxResults ?? -1,
         show_keys: options?.showKeys ?? false,
         expand_keys: options?.expandKeys ?? false,
+        order: options?.order ?? undefined,
       }),
     });
 
     return await req.json();
+  }
+
+  /**
+   * Gets metadata for all tables for this user
+   * @example
+   * ```javascript
+   * await cookieDB.meta()
+   * ```
+   */
+  async meta(): Promise<
+    Record<string, {
+      schema: Schema;
+    }>
+  > {
+    const req = await fetch(`${this.url}/meta`, {
+      method: "POST",
+      headers: {
+        Authorization: this.auth,
+      },
+    });
+
+    return await req.json();
+  }
+
+  /**
+   * Creates a user for this database. Requires an administrator token.
+   * @example
+   * ```javascript
+   * await cookieDB.createUser({ username: "cookie fan", token: "a_very_secure_password" })
+   * ```
+   */
+  async createUser(
+    options?: { username?: string; token?: string; admin?: boolean },
+  ): Promise<{
+    username: string;
+    token: string;
+  }> {
+    const req = await fetch(`${this.url}/create_user`, {
+      method: "POST",
+      headers: {
+        Authorization: this.auth,
+      },
+      body: JSON.stringify(options),
+    });
+
+    return await req.json();
+  }
+
+  /**
+   * Deletes a user for this database. Requires an administrator token.
+   * @example
+   * ```javascript
+   * await cookieDB.deleteUser("cookie fan")
+   * ```
+   */
+  async deleteUser(username: string) {
+    const req = await fetch(`${this.url}/delete_user/${username}`, {
+      method: "POST",
+      headers: {
+        Authorization: this.auth,
+      },
+    });
+
+    const res = await req.text();
+
+    if (res !== "success") throw res;
   }
 }

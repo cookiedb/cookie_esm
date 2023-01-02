@@ -1,19 +1,27 @@
-import { assertEquals } from "https://deno.land/std@0.167.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.170.0/testing/asserts.ts";
 import { CookieDB } from "./mod.ts";
 
 // Create test directory
-await Deno.run({ cmd: ['cookie', 'init', './test'] }).status()
+await Deno.run({ cmd: ["cookie", "init", "./test"] }).status();
 
 // Create test user
-await Deno.run({ cmd: ['cookie', 'make_user', './test', '--auth=UKTZOvKweOG6tyKQl3q1SZlNx7AthowA']}).status()
+await Deno.run({
+  cmd: [
+    "cookie",
+    "create_user",
+    "./test",
+    "--token=UKTZOvKweOG6tyKQl3q1SZlNx7AthowA",
+    "--admin",
+  ],
+}).status();
 
 // Run cookie
 const cookieProcess = Deno.run({
-  cmd: ['cookie', 'start', './test']
-})
+  cmd: ["cookie", "start", "./test"],
+});
 
 // Wait two seconds for the cookie instance to start up
-await new Promise(r => setTimeout(r, 2000));
+await new Promise((r) => setTimeout(r, 2000));
 
 Deno.test("README demo works", async () => {
   // Initialize instance
@@ -25,8 +33,28 @@ Deno.test("README demo works", async () => {
   // Create a table with a schema
   await cookieDB.createTable("users", {
     name: "string",
-    description: "string?",
+    description: "nullable string",
     age: "number",
+  });
+
+  // Get schema for a table
+  assertEquals(await cookieDB.metaTable("users"), {
+    schema: {
+      name: "string",
+      description: "nullable string",
+      age: "number",
+    },
+  });
+
+  // Get schemas for all table
+  assertEquals(await cookieDB.meta(), {
+    users: {
+      schema: {
+        name: "string",
+        description: "nullable string",
+        age: "number",
+      },
+    },
   });
 
   // Insert document
@@ -77,5 +105,16 @@ Deno.test("README demo works", async () => {
   // Drop the table
   await cookieDB.dropTable("users");
 
-  await cookieProcess.kill()
+  // Create a user
+  const { username, token } = await cookieDB.createUser({
+    username: "cookie fan",
+    token: "a_very_secure_password",
+  });
+  assertEquals("cookie fan", username);
+  assertEquals("a_very_secure_password", token);
+
+  // Delete a user
+  await cookieDB.deleteUser("cookie fan");
+
+  await cookieProcess.kill();
 });
