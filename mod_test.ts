@@ -1,4 +1,4 @@
-import { assertEquals } from "https://deno.land/std@0.170.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.171.0/testing/asserts.ts";
 import { CookieDB } from "./mod.ts";
 
 // Create test directory
@@ -86,7 +86,6 @@ Deno.test("README demo works", async () => {
     'starts_with($name, "cookie")',
     {
       maxResults: 5,
-      showKeys: true,
     },
   );
 

@@ -174,7 +174,7 @@ export class CookieDB {
         Authorization: this.auth,
       },
       body: JSON.stringify({
-        expand_keys: !!expandKeys, // force into boolean
+        expand_keys: expandKeys,
       }),
     });
 
@@ -258,10 +258,10 @@ export class CookieDB {
       },
       body: JSON.stringify({
         where: where,
-        max_results: options?.maxResults ?? -1,
-        show_keys: options?.showKeys ?? false,
-        expand_keys: options?.expandKeys ?? false,
-        order: options?.order ?? undefined,
+        max_results: options?.maxResults,
+        show_keys: options?.showKeys,
+        expand_keys: options?.expandKeys,
+        order: options?.order,
       }),
     });
 
