@@ -56,7 +56,6 @@ const usersThatStartWithCookie = await cookieDB.select(
   'starts_with($name, "cookie")',
   {
     maxResults: 5,
-    showKeys: true,
   },
 );
 
