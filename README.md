@@ -45,7 +45,6 @@ const cookieFan = await cookieDB.get("users", cookieFanKey);
 
 // Update document
 await cookieDB.update("users", cookieFanKey, {
-  name: "cookie_fan",
   description: "a huge fan of cookies",
   age: 21,
 });
