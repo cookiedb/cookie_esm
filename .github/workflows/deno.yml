@@ -31,7 +31,7 @@ jobs:
           deno-version: v1.x
 
       - name: Setup Cookie CLI
-        run: deno install -Af -n cookie https://deno.land/x/cookiedb/cli.ts
+        run: deno install -Af -n cookie https://raw.githubusercontent.com/cookiedb/CookieDB/main/cli.ts
       
       - name: Verify formatting
         run: deno fmt --check
