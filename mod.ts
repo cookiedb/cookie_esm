@@ -65,7 +65,7 @@ export class CookieDB {
    * ```javascript
    * await cookieDB.createTable('users', {
    *  name: 'string',
-   *  description: 'string?',
+   *  description: 'nullable string',
    *  age: 'number'
    * })
    * ```
@@ -113,6 +113,7 @@ export class CookieDB {
    */
   async metaTable(table: string): Promise<{
     schema: Schema;
+    size: number;
   }> {
     const req = await fetch(`${this.url}/meta/${table}`, {
       method: "POST",
@@ -206,7 +207,6 @@ export class CookieDB {
    * @example
    * ```javascript
    * await cookieDB.delete('users', 'b94a8779-f737-466b-ac40-4dfb130f0eee', {
-   *  name: 'cookie_fan',
    *  description: 'a huge fan of cookies',
    *  age: 21
    * })
@@ -234,7 +234,6 @@ export class CookieDB {
    *  name: 'starts_with($, "cookie")'
    * }, {
    *  maxResults: 5,
-   *  showKeys: true
    * })
    * ```
    */
@@ -275,11 +274,12 @@ export class CookieDB {
    * await cookieDB.meta()
    * ```
    */
-  async meta(): Promise<
-    Record<string, {
+  async meta(): Promise<{
+    tables: Record<string, {
       schema: Schema;
-    }>
-  > {
+    }>;
+    size: number;
+  }> {
     const req = await fetch(`${this.url}/meta`, {
       method: "POST",
       headers: {

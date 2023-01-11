@@ -44,17 +44,21 @@ Deno.test("README demo works", async () => {
       description: "nullable string",
       age: "number",
     },
+    size: 0,
   });
 
   // Get schemas for all table
   assertEquals(await cookieDB.meta(), {
-    users: {
-      schema: {
-        name: "string",
-        description: "nullable string",
-        age: "number",
+    tables: {
+      users: {
+        schema: {
+          name: "string",
+          description: "nullable string",
+          age: "number",
+        },
       },
     },
+    size: 159,
   });
 
   // Insert document
