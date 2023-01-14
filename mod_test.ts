@@ -1,4 +1,7 @@
-import { assertEquals } from "https://deno.land/std@0.171.0/testing/asserts.ts";
+import {
+  assertEquals,
+  assertNotEquals,
+} from "https://deno.land/std@0.172.0/testing/asserts.ts";
 import { CookieDB } from "./mod.ts";
 
 // Create test directory
@@ -115,6 +118,12 @@ Deno.test("README demo works", async () => {
   });
   assertEquals("cookie fan", username);
   assertEquals("a_very_secure_password", token);
+
+  // Regenerate a user's token
+  const { token: new_token } = await cookieDB.regenerateToken(
+    "cookie_fan",
+  );
+  assertNotEquals(token, new_token);
 
   // Delete a user
   await cookieDB.deleteUser("cookie fan");

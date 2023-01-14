@@ -66,10 +66,15 @@ await cookieDB.dropTable("users");
 
 // Create a user
 const { username, token } = await cookieDB.createUser({
-  username: "cookie fan",
+  username: "cookie_fan",
   token: "a_very_secure_password",
 });
 
+// Regenerate a user's token
+const { token: new_token } = await cookieDB.regenerateToken(
+  "cookie_fan",
+);
+
 // Delete a user
-await cookieDB.deleteUser("cookie fan");
+await cookieDB.deleteUser("cookie_fan");
 ```

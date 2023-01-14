@@ -294,7 +294,7 @@ export class CookieDB {
    * Creates a user for this database. Requires an administrator token.
    * @example
    * ```javascript
-   * await cookieDB.createUser({ username: "cookie fan", token: "a_very_secure_password" })
+   * await cookieDB.createUser({ username: "cookie_fan", token: "a_very_secure_password" })
    * ```
    */
   async createUser(
@@ -318,7 +318,7 @@ export class CookieDB {
    * Deletes a user for this database. Requires an administrator token.
    * @example
    * ```javascript
-   * await cookieDB.deleteUser("cookie fan")
+   * await cookieDB.deleteUser("cookie_fan")
    * ```
    */
   async deleteUser(username: string) {
@@ -332,5 +332,23 @@ export class CookieDB {
     const res = await req.text();
 
     if (res !== "success") throw res;
+  }
+
+  /**
+   * Regenerates a token for a user for this database. Requires an administrator token.
+   * @example
+   * ```javascript
+   * await cookieDB.regenerateToken("cookie_fan")
+   * ```
+   */
+  async regenerateToken(username: string) {
+    const req = await fetch(`${this.url}/regenerate_token/${username}`, {
+      method: "POST",
+      headers: {
+        Authorization: this.auth,
+      },
+    });
+
+    return await req.json();
   }
 }
