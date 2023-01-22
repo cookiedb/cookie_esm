@@ -78,6 +78,7 @@ Deno.test("README demo works", async () => {
     name: "cookie_fan",
     description: null,
     age: 20,
+    key: cookieFanKey,
   });
 
   // Update document
@@ -107,6 +108,9 @@ Deno.test("README demo works", async () => {
 
   // Delete document
   await cookieDB.delete("users", cookieFanKey);
+
+  // Delete documents by query
+  await cookieDB.deleteByQuery("users", 'starts_with($name, "cookie")');
 
   // Drop the table
   await cookieDB.dropTable("users");
