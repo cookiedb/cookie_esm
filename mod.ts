@@ -189,7 +189,7 @@ export class CookieDB {
    * await cookieDB.delete('users', 'b94a8779-f737-466b-ac40-4dfb130f0eee')
    * ```
    */
-  async delete(table: string, key: string) {
+  async delete(table: string, key: string): Promise<string> {
     const req = await fetch(`${this.url}/delete/${table}/${key}`, {
       method: "POST",
       headers: {
@@ -197,9 +197,28 @@ export class CookieDB {
       },
     });
 
-    const res = await req.text();
+    return await req.json();
+  }
 
-    if (res !== "success") throw res;
+  /**
+   * Delete documents from table by query.
+   * @example
+   * ```javascript
+   * await cookieDB.deleteByQuery('users', 'starts_with($name, "cookie")')
+   * ```
+   */
+  async deleteByQuery(table: string, query: string): Promise<string[]> {
+    const req = await fetch(`${this.url}/delete/${table}`, {
+      method: "POST",
+      headers: {
+        Authorization: this.auth,
+      },
+      body: JSON.stringify({
+        where: query,
+      }),
+    });
+
+    return await req.json();
   }
 
   /**
@@ -230,9 +249,7 @@ export class CookieDB {
    * Selects a number of documents from a table. Accepts an options argument that specifies the maximum amount of results, whether to display keys, and whether to join documents by foreign keys.
    * @example
    * ```javascript
-   * await cookieDB.select('users', {
-   *  name: 'starts_with($, "cookie")'
-   * }, {
+   * await cookieDB.select('users', 'starts_with($name, "cookie")', {
    *  maxResults: 5,
    * })
    * ```

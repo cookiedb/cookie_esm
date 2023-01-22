@@ -61,6 +61,9 @@ const usersThatStartWithCookie = await cookieDB.select(
 // Delete document
 await cookieDB.delete("users", cookieFanKey);
 
+// Delete documents by query
+await cookieDB.deleteByQuery("users", 'starts_with($name, "cookie")');
+
 // Drop the table
 await cookieDB.dropTable("users");
 
