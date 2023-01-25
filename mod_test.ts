@@ -1,7 +1,7 @@
 import {
   assertEquals,
   assertNotEquals,
-} from "https://deno.land/std@0.172.0/testing/asserts.ts";
+} from "https://deno.land/std@0.173.0/testing/asserts.ts";
 import { CookieDB } from "./mod.ts";
 
 // Create test directory
@@ -61,7 +61,7 @@ Deno.test("README demo works", async () => {
         },
       },
     },
-    size: 159,
+    size: 179,
   });
 
   // Insert document
@@ -71,8 +71,15 @@ Deno.test("README demo works", async () => {
     age: 20,
   });
 
+  interface User {
+    name: string;
+    description: string | null;
+    age: number;
+    key: string;
+  }
+
   // Get document
-  const cookieFan = await cookieDB.get("users", cookieFanKey);
+  const cookieFan = await cookieDB.get<User>("users", cookieFanKey);
 
   assertEquals(cookieFan, {
     name: "cookie_fan",
@@ -112,8 +119,19 @@ Deno.test("README demo works", async () => {
   // Delete documents by query
   await cookieDB.deleteByQuery("users", 'starts_with($name, "cookie")');
 
+  // Edit the table
+  await cookieDB.editTable("users", {
+    name: "deprecatedUsers",
+    schema: {
+      name: "string",
+    },
+    alias: {
+      name: "$name",
+    },
+  });
+
   // Drop the table
-  await cookieDB.dropTable("users");
+  await cookieDB.dropTable("deprecatedUsers");
 
   // Create a user
   const { username, token } = await cookieDB.createUser({
