@@ -40,8 +40,15 @@ const cookieFanKey = await cookieDB.insert("users", {
   age: 20,
 });
 
+interface User {
+  name: string;
+  description: string | null;
+  age: number;
+  key: string;
+}
+
 // Get document
-const cookieFan = await cookieDB.get("users", cookieFanKey);
+const cookieFan = await cookieDB.get<User>("users", cookieFanKey);
 
 // Update document
 await cookieDB.update("users", cookieFanKey, {
@@ -64,8 +71,19 @@ await cookieDB.delete("users", cookieFanKey);
 // Delete documents by query
 await cookieDB.deleteByQuery("users", 'starts_with($name, "cookie")');
 
+// Edit the table
+await cookieDB.editTable("users", {
+  name: "deprecatedUsers",
+  schema: {
+    name: "string",
+  },
+  alias: {
+    name: "$name",
+  },
+});
+
 // Drop the table
-await cookieDB.dropTable("users");
+await cookieDB.dropTable("deprecatedUsers");
 
 // Create a user
 const { username, token } = await cookieDB.createUser({

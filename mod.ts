@@ -28,15 +28,22 @@ export interface Schema {
 }
 
 /**
- * A type representing valid types for CookieDB
+ * Valid types that may be in a document
  */
-export type ValidTypes = string | number | boolean | null;
+export type PossibleTypes = string | boolean | number | null;
 
 /**
- * A type representing a valid document
+ * Type definition for a document
  */
 export interface Document {
-  [key: string]: ValidTypes | ValidTypes[] | Document;
+  [key: string]: PossibleTypes | Document;
+}
+
+/**
+ * Type definition for an alias
+ */
+export interface Alias {
+  [key: string]: string | Alias;
 }
 
 /**
@@ -79,9 +86,42 @@ export class CookieDB {
       body: schema ? JSON.stringify(schema) : undefined,
     });
 
-    const res = await req.text();
+    const res = await req.json();
 
-    if (res !== "success") throw res;
+    if (res.error) throw res.error;
+  }
+
+  /**
+   * Edit a table by name
+   * @example
+   * ```javascript
+   * await cookieDB.editTable('users', {
+   *  name: 'oldUsers',
+   *  schema: {
+   *    name: 'string'
+   *  },
+   *  alias: {
+   *    name: '$name'
+   *  }
+   * })
+   * ```
+   */
+  async editTable(table: string, opts: {
+    name?: string;
+    schema?: Schema;
+    alias?: Alias;
+  }) {
+    const req = await fetch(`${this.url}/edit/${table}`, {
+      method: "POST",
+      headers: {
+        Authorization: this.auth,
+      },
+      body: JSON.stringify(opts),
+    });
+
+    const res = await req.json();
+
+    if (res.error) throw res.error;
   }
 
   /**
@@ -99,9 +139,9 @@ export class CookieDB {
       },
     });
 
-    const res = await req.text();
+    const res = await req.json();
 
-    if (res !== "success") throw res;
+    if (res.error) throw res.error;
   }
 
   /**
@@ -122,7 +162,11 @@ export class CookieDB {
       },
     });
 
-    return await req.json();
+    const res = await req.json();
+
+    if (res.error) throw res.error;
+
+    return res;
   }
 
   /**
@@ -137,10 +181,10 @@ export class CookieDB {
    * })
    * ```
    */
-  async insert<T extends Document | Document[]>(
+  async insert<T>(
     table: string,
     document: T,
-  ): Promise<T extends Document[] ? string[] : string> {
+  ): Promise<T extends Array<T> ? string[] : string> {
     const req = await fetch(`${this.url}/insert/${table}`, {
       method: "POST",
       headers: {
@@ -149,11 +193,21 @@ export class CookieDB {
       body: JSON.stringify(document),
     });
 
+    const res = await req.text();
+
+    try {
+      throw JSON.parse(res).error;
+    } catch (e) {
+      if (!(e instanceof SyntaxError)) {
+        throw e;
+      }
+    }
+
     if (Array.isArray(document)) {
-      return await req.json();
+      return JSON.parse(res);
     } else {
-      // @ts-ignore we return a string conditionally here, but typescript isn't smart enough to narrow types in this situation
-      return await req.text();
+      //@ts-ignore ts isn't smart enough to do type narrowing like this quite yet
+      return res;
     }
   }
 
@@ -164,11 +218,11 @@ export class CookieDB {
    * await cookieDB.get('users', 'b94a8779-f737-466b-ac40-4dfb130f0eee')
    * ```
    */
-  async get(
+  async get<T>(
     table: string,
     key: string,
     expandKeys?: boolean,
-  ): Promise<Document> {
+  ): Promise<T> {
     const req = await fetch(`${this.url}/get/${table}/${key}`, {
       method: "POST",
       headers: {
@@ -179,7 +233,11 @@ export class CookieDB {
       }),
     });
 
-    return await req.json();
+    const res = await req.json();
+
+    if (res.error) throw res.error;
+
+    return res;
   }
 
   /**
@@ -189,7 +247,7 @@ export class CookieDB {
    * await cookieDB.delete('users', 'b94a8779-f737-466b-ac40-4dfb130f0eee')
    * ```
    */
-  async delete(table: string, key: string): Promise<string> {
+  async delete(table: string, key: string) {
     const req = await fetch(`${this.url}/delete/${table}/${key}`, {
       method: "POST",
       headers: {
@@ -197,7 +255,9 @@ export class CookieDB {
       },
     });
 
-    return await req.json();
+    const res = await req.json();
+
+    if (res.error) throw res.error;
   }
 
   /**
@@ -218,7 +278,11 @@ export class CookieDB {
       }),
     });
 
-    return await req.json();
+    const res = await req.json();
+
+    if (res.error) throw res.error;
+
+    return res;
   }
 
   /**
@@ -240,9 +304,9 @@ export class CookieDB {
       body: JSON.stringify(document),
     });
 
-    const res = await req.text();
+    const res = await req.json();
 
-    if (res !== "success") throw res;
+    if (res.error) throw res.error;
   }
 
   /**
@@ -254,19 +318,19 @@ export class CookieDB {
    * })
    * ```
    */
-  async select(
+  async select<T>(
     table: string,
     where?: string,
     options?: {
       maxResults?: number;
-      showKeys?: boolean;
       expandKeys?: boolean;
+      alias?: Alias;
       order?: {
         by: string;
         descending?: boolean;
       };
     },
-  ): Promise<Document[]> {
+  ): Promise<T[]> {
     const req = await fetch(`${this.url}/select/${table}`, {
       method: "POST",
       headers: {
@@ -275,13 +339,17 @@ export class CookieDB {
       body: JSON.stringify({
         where: where,
         max_results: options?.maxResults,
-        show_keys: options?.showKeys,
         expand_keys: options?.expandKeys,
+        alias: options?.alias,
         order: options?.order,
       }),
     });
 
-    return await req.json();
+    const res = await req.json();
+
+    if (res.error) throw res.error;
+
+    return res;
   }
 
   /**
@@ -304,7 +372,11 @@ export class CookieDB {
       },
     });
 
-    return await req.json();
+    const res = await req.json();
+
+    if (res.error) throw res.error;
+
+    return res;
   }
 
   /**
@@ -328,7 +400,11 @@ export class CookieDB {
       body: JSON.stringify(options),
     });
 
-    return await req.json();
+    const res = await req.json();
+
+    if (res.error) throw res.error;
+
+    return res;
   }
 
   /**
@@ -346,9 +422,11 @@ export class CookieDB {
       },
     });
 
-    const res = await req.text();
+    const res = await req.json();
 
-    if (res !== "success") throw res;
+    if (res.error) throw res.error;
+
+    return res;
   }
 
   /**
@@ -366,6 +444,10 @@ export class CookieDB {
       },
     });
 
-    return await req.json();
+    const res = await req.json();
+
+    if (res.error) throw res.error;
+
+    return res;
   }
 }
