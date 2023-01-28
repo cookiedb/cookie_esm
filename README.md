@@ -1,13 +1,13 @@
 # CookieDB for ESM
 
-> A fast and correct [CookieDB](https://github.com/cookiedb/CookieDB) driver for
-> esm platforms (like Deno or the web)
+> A fast and correct [CookieDB](https://cookiedb.com) driver for javascript
+> runtimes (like Deno, Node, or the web)
+
+Examples for how to use this module can be found on the
+[official documentation site](https://docs.cookiedb.com)
 
 Documentation for this module can be found
 [here](https://deno.land/x/cookie_driver/mod.ts).
-
-Documentation for CookieDB can be found on
-[the official Github repo](https://github.com/cookiedb/CookieDB).
 
 ## Example
 
@@ -99,3 +99,5 @@ const { token: new_token } = await cookieDB.regenerateToken(
 // Delete a user
 await cookieDB.deleteUser("cookie_fan");
 ```
+
+If for some reason you are still using Node.

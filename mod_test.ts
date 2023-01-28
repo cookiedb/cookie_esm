@@ -1,32 +1,38 @@
 import {
   assertEquals,
   assertNotEquals,
-} from "https://deno.land/std@0.173.0/testing/asserts.ts";
+} from "https://deno.land/std@0.175.0/testing/asserts.ts";
 import { CookieDB } from "./mod.ts";
 
-// Create test directory
-await Deno.run({ cmd: ["cookie", "init", "./test"] }).status();
+Deno.test("Intialize CookieDB", () => {
+  // Create test directory
+  new Deno.Command("cookie", { args: ["init", "./test"] }).outputSync();
 
-// Create test user
-await Deno.run({
-  cmd: [
-    "cookie",
-    "create_user",
-    "./test",
-    "--token=UKTZOvKweOG6tyKQl3q1SZlNx7AthowA",
-    "--admin",
-  ],
-}).status();
-
-// Run cookie
-const cookieProcess = Deno.run({
-  cmd: ["cookie", "start", "./test"],
+  // Create test user
+  new Deno.Command("cookie", {
+    args: [
+      "create_user",
+      "./test",
+      "--token=UKTZOvKweOG6tyKQl3q1SZlNx7AthowA",
+      "--admin",
+    ],
+  }).outputSync();
 });
 
-// Wait two seconds for the cookie instance to start up
-await new Promise((r) => setTimeout(r, 2000));
-
 Deno.test("README demo works", async () => {
+  // Run cookie
+  const cookieProcess = new Deno.Command("cookie", {
+    args: ["start", "./test"],
+    stdout: "null",
+  }).spawn();
+
+  // Wait two seconds for the cookie instance to start up
+  await new Promise((r) => setTimeout(r, 2000));
+
+  /*
+   * START README DEMO
+   */
+
   // Initialize instance
   const cookieDB = new CookieDB(
     "http://localhost:8777",
@@ -149,6 +155,10 @@ Deno.test("README demo works", async () => {
 
   // Delete a user
   await cookieDB.deleteUser("cookie fan");
+
+  /*
+   * END README DEMO
+   */
 
   await cookieProcess.kill();
 });
