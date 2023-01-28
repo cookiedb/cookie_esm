@@ -1,18 +1,14 @@
-# CookieDB for ESM
+# CookieDB for Node
 
-> A fast and correct [CookieDB](https://cookiedb.com) driver for javascript
-> runtimes (like Deno, Node, or the web)
+> A fast and correct [CookieDB](https://cookiedb.com) driver for Node
 
 Examples for how to use this module can be found on the
 [official documentation site](https://docs.cookiedb.com)
 
-Documentation for this module can be found
-[here](https://deno.land/x/cookie_driver/mod.ts).
-
 ## Example
 
 ```typescript
-import { CookieDB } from "https://deno.land/x/cookie_driver/mod.ts";
+const { CookieDB } = require("cookie-driver");
 
 // Initialize instance
 const cookieDB = new CookieDB(

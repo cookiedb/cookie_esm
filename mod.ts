@@ -425,8 +425,6 @@ export class CookieDB {
     const res = await req.json();
 
     if (res.error) throw res.error;
-
-    return res;
   }
 
   /**
@@ -436,7 +434,9 @@ export class CookieDB {
    * await cookieDB.regenerateToken("cookie_fan")
    * ```
    */
-  async regenerateToken(username: string) {
+  async regenerateToken(
+    username: string,
+  ): Promise<{ username: string; token: string }> {
     const req = await fetch(`${this.url}/regenerate_token/${username}`, {
       method: "POST",
       headers: {
