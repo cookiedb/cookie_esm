@@ -28,18 +28,6 @@ export interface Schema {
 }
 
 /**
- * Valid types that may be in a document
- */
-export type PossibleTypes = string | boolean | number | null;
-
-/**
- * Type definition for a document
- */
-export interface Document {
-  [key: string]: PossibleTypes | Document;
-}
-
-/**
  * Type definition for an alias
  */
 export interface Alias {
@@ -289,13 +277,13 @@ export class CookieDB {
    * Update a document from table by key.
    * @example
    * ```javascript
-   * await cookieDB.delete('users', 'b94a8779-f737-466b-ac40-4dfb130f0eee', {
+   * await cookieDB.update('users', 'b94a8779-f737-466b-ac40-4dfb130f0eee', {
    *  description: 'a huge fan of cookies',
    *  age: 21
    * })
    * ```
    */
-  async update(table: string, key: string, document: Document) {
+  async update<T>(table: string, key: string, document: Partial<T>) {
     const req = await fetch(`${this.url}/update/${table}/${key}`, {
       method: "POST",
       headers: {
