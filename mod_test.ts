@@ -95,7 +95,7 @@ Deno.test("README demo works", async () => {
   });
 
   // Update document
-  await cookieDB.update("users", cookieFanKey, {
+  await cookieDB.update<User>("users", cookieFanKey, {
     name: "cookie_fan",
     description: "a huge fan of cookies",
     age: 21,

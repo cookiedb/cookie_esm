@@ -51,13 +51,13 @@ interface User {
 const cookieFan = await cookieDB.get<User>("users", cookieFanKey);
 
 // Update document
-await cookieDB.update("users", cookieFanKey, {
+await cookieDB.update<User>("users", cookieFanKey, {
   description: "a huge fan of cookies",
   age: 21,
 });
 
 // Select document by query
-const usersThatStartWithCookie = await cookieDB.select(
+const usersThatStartWithCookie = await cookieDB.select<User>(
   "users",
   'starts_with($name, "cookie")',
   {
